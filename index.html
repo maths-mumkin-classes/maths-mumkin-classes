@@ -31,7 +31,7 @@ async function monthFees(ym){
 async function renderDue(){
  let ym=dueMonth.value||month();
  let payments=await monthFees(ym), paid={}; payments.forEach(x=>paid[x.student_id]=(paid[x.student_id]||0)+Number(x.amount));
- dueRows.innerHTML=students.map(s=>{let p=paid[s.id]||0,d=Math.max(0,Number(s.monthly_fee)-p);if(d<=0)return '';let phone=waNumber(s.phone);let msg='Dear Parent,\n\nThis is a gentle reminder from Maths Mumkin Classes regarding the pending coaching fee for '+s.name+'.\n\n📚 Class: '+(s.class_name||'')+'\n📅 Fee Month: '+ym+'\n💰 Amount Due: ₹'+d+'\n\nKindly clear the pending fee at your earliest convenience.\n\nThank you.\nMaths Mumkin Classes';let wa=phone?`<button class="btnlink" onclick="openDueWhatsApp(${s.id},${d},'${ym}')">WhatsApp</button>`:'-';return `<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>₹${s.monthly_fee}</td><td>₹${p}</td><td><span class="pill">₹${d}</span></td><td>${wa}</td></tr>`}).join('')||'<tr><td colspan="6">No outstanding dues for this month.</td></tr>';
+ dueRows.innerHTML=students.map(s=>{let p=paid[s.id]||0,d=Math.max(0,Number(s.monthly_fee)-p);if(d<=0)return '';let phone=waNumber(s.phone);let msg='Dear Parent,\n\nThis is a gentle reminder from Maths Mumkin Classes regarding the pending coaching fee for '+s.name+'.\n\n📚 Class: '+(s.class_name||'')+'\n📅 Fee Month: '+ym+'\n💰 Amount Due: ₹'+d+'\n\nKindly clear the pending fee at your earliest convenience.\n\nThank you.\nMaths Mumkin Classes';let wa=`<button class="btnlink" onclick="openDueWhatsApp(${s.id},${d},'${ym}')">${phone?'WhatsApp':'Add WhatsApp'}</button>`;return `<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>₹${s.monthly_fee}</td><td>₹${p}</td><td><span class="pill">₹${d}</span></td><td>${wa}</td></tr>`}).join('')||'<tr><td colspan="6">No outstanding dues for this month.</td></tr>';
 }
 async function renderReports(){
  let ym=reportMonth.value||month(), payments=await monthFees(ym), collected=payments.reduce((a,x)=>a+Number(x.amount),0), due=0;
@@ -80,14 +80,33 @@ async function exportAttendanceCSV(){let d=reportDate.value||today(),r=await sb.
 function openStudentWhatsApp(id){
  const s=students.find(x=>x.id===id); if(!s)return alert('Student not found.');
  const msg=`Hello, ${s.name}'s Parent,\n\nThis is a message from Maths Mumkin Classes.\n\nWe are pleased to have ${s.name} as a student at our coaching classes.\n\n📚 Class: ${s.class_name||''}\n💰 Monthly Fee: ₹${s.monthly_fee||0}\n📅 Joining Date: ${s.joining_date||''}\n\nThank you for your continued support.\n\nRegards,\nMaths Mumkin Classes`;
- const url=waLink(s.phone,msg); if(!url)return alert('Please enter a valid 10-digit Indian mobile number.'); window.open(url,'_blank','noopener');
+ let n=waNumber(s.phone);
+ if(n.length!==12||!n.startsWith('91')){
+   if(profile?.role!=='admin') return alert('No WhatsApp number is saved for '+s.name+'. Please ask the Admin to add the student mobile number.');
+   const entered=prompt('Enter 10-digit WhatsApp number for '+s.name+':',s.phone||'');
+   n=waNumber(entered);
+   if(n.length!==12||!n.startsWith('91')) return alert('Please enter a valid 10-digit Indian mobile number.');
+   const save=await sb.from('students').update({phone:entered.replace(/\s+/g,'')}).eq('id',id);
+   if(save.error)return alert('Could not save mobile number: '+save.error.message);
+   s.phone=entered.replace(/\s+/g,'');
+ }
+ window.open(waLink(n,msg),'_blank','noopener');
 }
 async function openDueWhatsApp(id,d,ym){
  const s=students.find(x=>x.id===id); if(!s)return alert('Student not found.');
  // Fetch the latest saved phone number so Fee Due always uses the student's default number.
  let phone=s.phone||'';
  try{const r=await sb.from('students').select('phone,name,class_name').eq('id',id).single();if(!r.error&&r.data){phone=r.data.phone||phone;s.name=r.data.name||s.name;s.class_name=r.data.class_name||s.class_name;}}catch(e){}
- const n=waNumber(phone); if(n.length!==12||!n.startsWith('91'))return alert('No valid WhatsApp number is saved for '+s.name+'. Edit the student and save a 10-digit mobile number.');
+ let n=waNumber(phone);
+ if(n.length!==12||!n.startsWith('91')){
+   if(profile?.role!=='admin') return alert('No WhatsApp number is saved for '+s.name+'. Please ask the Admin to add the student mobile number.');
+   const entered=prompt('Enter 10-digit WhatsApp number for '+s.name+':', phone||'');
+   n=waNumber(entered);
+   if(n.length!==12||!n.startsWith('91')) return alert('Please enter a valid 10-digit Indian mobile number.');
+   const save=await sb.from('students').update({phone:entered.replace(/\s+/g,'')}).eq('id',id);
+   if(save.error)return alert('Could not save mobile number: '+save.error.message);
+   s.phone=entered.replace(/\s+/g,'');
+ }
  const msg=`Dear Parent,\n\nThis is a gentle reminder from Maths Mumkin Classes regarding the pending coaching fee for ${s.name}.\n\n📚 Class: ${s.class_name||''}\n📅 Fee Month: ${ym}\n💰 Amount Due: ₹${d}\n\nKindly clear the pending fee at your earliest convenience.\n\nThank you.\nMaths Mumkin Classes`;
  window.location.href=waLink(n,msg);
 }
@@ -95,7 +114,15 @@ async function shareReceiptWhatsApp(studentId,name,feeMonth,amount,receipt){
  // Always use the student's saved/default number; do not open the generic contact picker.
  let phone='';
  try{const r=await sb.from('students').select('phone,name').eq('id',studentId).single();if(!r.error&&r.data){phone=r.data.phone||'';name=r.data.name||name;}}catch(e){}
- const n=waNumber(phone); if(n.length!==12||!n.startsWith('91'))return alert('No valid WhatsApp number is saved for '+name+'. Edit the student and save a 10-digit mobile number.');
+ let n=waNumber(phone);
+ if(n.length!==12||!n.startsWith('91')){
+   if(profile?.role!=='admin') return alert('No WhatsApp number is saved for '+name+'. Please ask the Admin to add the student mobile number.');
+   const entered=prompt('Enter 10-digit WhatsApp number for '+name+':', phone||'');
+   n=waNumber(entered);
+   if(n.length!==12||!n.startsWith('91')) return alert('Please enter a valid 10-digit Indian mobile number.');
+   const save=await sb.from('students').update({phone:entered.replace(/\s+/g,'')}).eq('id',studentId);
+   if(save.error)return alert('Could not save mobile number: '+save.error.message);
+ }
  const msg=`Dear Parent,\n\nThank you for the fee payment for ${name}.\n\n🧾 Receipt No.: ${receipt}\n📅 Fee Month: ${feeMonth}\n💰 Amount Paid: ₹${amount}\n\nPlease find the fee receipt attached.\n\nRegards,\nMaths Mumkin Classes`;
  window.location.href=waLink(n,msg);
  setTimeout(()=>alert('WhatsApp opened for '+name+' with the receipt message. Attach the saved receipt PDF/image and tap Send.'),700);
