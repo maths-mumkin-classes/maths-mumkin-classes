@@ -82,25 +82,23 @@ function openStudentWhatsApp(id){
  const msg=`Hello, ${s.name}'s Parent,\n\nThis is a message from Maths Mumkin Classes.\n\nWe are pleased to have ${s.name} as a student at our coaching classes.\n\n📚 Class: ${s.class_name||''}\n💰 Monthly Fee: ₹${s.monthly_fee||0}\n📅 Joining Date: ${s.joining_date||''}\n\nThank you for your continued support.\n\nRegards,\nMaths Mumkin Classes`;
  const url=waLink(s.phone,msg); if(!url)return alert('Please enter a valid 10-digit Indian mobile number.'); window.open(url,'_blank','noopener');
 }
-function openDueWhatsApp(id,d,ym){
+async function openDueWhatsApp(id,d,ym){
  const s=students.find(x=>x.id===id); if(!s)return alert('Student not found.');
+ // Fetch the latest saved phone number so Fee Due always uses the student's default number.
+ let phone=s.phone||'';
+ try{const r=await sb.from('students').select('phone,name,class_name').eq('id',id).single();if(!r.error&&r.data){phone=r.data.phone||phone;s.name=r.data.name||s.name;s.class_name=r.data.class_name||s.class_name;}}catch(e){}
+ const n=waNumber(phone); if(n.length!==12||!n.startsWith('91'))return alert('No valid WhatsApp number is saved for '+s.name+'. Edit the student and save a 10-digit mobile number.');
  const msg=`Dear Parent,\n\nThis is a gentle reminder from Maths Mumkin Classes regarding the pending coaching fee for ${s.name}.\n\n📚 Class: ${s.class_name||''}\n📅 Fee Month: ${ym}\n💰 Amount Due: ₹${d}\n\nKindly clear the pending fee at your earliest convenience.\n\nThank you.\nMaths Mumkin Classes`;
- const url=waLink(s.phone,msg); if(!url)return alert('Please enter a valid 10-digit Indian mobile number.'); window.open(url,'_blank','noopener');
+ window.location.href=waLink(n,msg);
 }
-async function shareReceiptWhatsApp(phone,name,feeMonth,amount,receipt){
+async function shareReceiptWhatsApp(studentId,name,feeMonth,amount,receipt){
+ // Always use the student's saved/default number; do not open the generic contact picker.
+ let phone='';
+ try{const r=await sb.from('students').select('phone,name').eq('id',studentId).single();if(!r.error&&r.data){phone=r.data.phone||'';name=r.data.name||name;}}catch(e){}
+ const n=waNumber(phone); if(n.length!==12||!n.startsWith('91'))return alert('No valid WhatsApp number is saved for '+name+'. Edit the student and save a 10-digit mobile number.');
  const msg=`Dear Parent,\n\nThank you for the fee payment for ${name}.\n\n🧾 Receipt No.: ${receipt}\n📅 Fee Month: ${feeMonth}\n💰 Amount Paid: ₹${amount}\n\nPlease find the fee receipt attached.\n\nRegards,\nMaths Mumkin Classes`;
- const url=waLink(phone,msg); if(!url)return alert('No valid student mobile number is available.');
- const el=document.querySelector('#receiptBox .receipt');
- try{
-  if(navigator.share && el && typeof html2canvas!=='undefined'){
-   const canvas=await html2canvas(el,{scale:2,backgroundColor:'#ffffff'});
-   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
-   const file=new File([blob],receipt+'-Fee-Receipt.png',{type:'image/png'});
-   if(navigator.canShare && navigator.canShare({files:[file]})){await navigator.share({files:[file],text:msg});return;}
-  }
- }catch(e){if(e?.name==='AbortError')return;}
- window.open(url,'_blank','noopener');
- alert('WhatsApp opened with the receipt message. Please attach the saved receipt PDF/image and tap Send.');
+ window.location.href=waLink(n,msg);
+ setTimeout(()=>alert('WhatsApp opened for '+name+' with the receipt message. Attach the saved receipt PDF/image and tap Send.'),700);
 }
 
 async function showReceipt(feeId){
@@ -116,7 +114,7 @@ async function showReceipt(feeId){
  <div class="line"><b>Payment Date</b><span>${x.payment_date}</span></div>
  <div class="line"><b>Recorded By</b><span>${x.recorded_by===user.id?'You':'Teacher'}</span></div>
  <br><p style="text-align:center">Thank you for your payment.</p></div>
- <br><div style="text-align:center"><button onclick="shareReceiptWhatsApp('${esc(s.phone||'')}','${esc(s.name||'Student')}','${String(x.fee_month).slice(0,7)}',${Number(x.amount)||0},'${receipt}')">📱 Share Receipt on WhatsApp</button> <button class="secondary" onclick="window.print()">Print / Save PDF</button></div>`;
+ <br><div style="text-align:center"><button onclick="shareReceiptWhatsApp(${x.student_id},'${esc(s.name||'Student')}','${String(x.fee_month).slice(0,7)}',${Number(x.amount)||0},'${receipt}')">📱 Share Receipt on WhatsApp</button> <button class="secondary" onclick="window.print()">Print / Save PDF</button></div>`;
  page('receiptPrint');
 }
 function downloadXLSX(filename, sheetName, rows){
