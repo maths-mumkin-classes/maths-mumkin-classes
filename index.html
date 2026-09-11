@@ -77,7 +77,7 @@ function exportStudentsCSV(){csvDownload('maths_mumkin_students.csv',[['Name','C
 async function exportFeesCSV(){let r=await sb.from('fees').select('fee_month,amount,payment_date,student_id');let map=Object.fromEntries(students.map(s=>[s.id,s.name]));csvDownload('maths_mumkin_fees.csv',[['Student','Month','Amount','Payment Date'],...(r.data||[]).map(x=>[map[x.student_id]||'',String(x.fee_month).slice(0,7),x.amount,x.payment_date])])}
 async function exportDueCSV(){let ym=dueMonth.value||month(),payments=await monthFees(ym),paid={};payments.forEach(x=>paid[x.student_id]=(paid[x.student_id]||0)+Number(x.amount));csvDownload('maths_mumkin_due_'+ym+'.csv',[['Student','Class','Monthly Fee','Paid','Due'],...students.map(s=>[s.name,s.class_name,s.monthly_fee,paid[s.id]||0,Math.max(0,Number(s.monthly_fee)-(paid[s.id]||0))]).filter(x=>Number(x[4])>0)])}
 async function exportAttendanceCSV(){let d=reportDate.value||today(),r=await sb.from('attendance').select('student_id,status').eq('attendance_date',d),map=Object.fromEntries((r.data||[]).map(x=>[x.student_id,x.status]));csvDownload('maths_mumkin_attendance_'+d+'.csv',[['Student','Class','Status'],...students.map(s=>[s.name,s.class_name,map[s.id]||'Not marked'])])}
-function openStudentWhatsApp(id){
+async function openStudentWhatsApp(id){
  const s=students.find(x=>x.id===id); if(!s)return alert('Student not found.');
  const msg=`Hello, ${s.name}'s Parent,\n\nThis is a message from Maths Mumkin Classes.\n\nWe are pleased to have ${s.name} as a student at our coaching classes.\n\n📚 Class: ${s.class_name||''}\n💰 Monthly Fee: ₹${s.monthly_fee||0}\n📅 Joining Date: ${s.joining_date||''}\n\nThank you for your continued support.\n\nRegards,\nMaths Mumkin Classes`;
  let n=waNumber(s.phone);
