@@ -1,5 +1,5 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maths Mumkin Classes</title><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script><script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script><style>body{font-family:Arial;margin:0;background:#f3f6fb;color:#172033}header{background:#2563eb;color:#fff;padding:16px;display:flex;justify-content:space-between;align-items:center}.wrap{max-width:1100px;margin:auto;padding:16px}.card{background:#fff;padding:16px;border-radius:12px;box-shadow:0 2px 10px #0001;margin-bottom:14px}input,select,button{padding:10px;border-radius:8px;border:1px solid #ccd3df}button{background:#2563eb;color:#fff;border:0;cursor:pointer}.secondary{background:#e5e7eb;color:#111}.danger{background:#dc2626}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat b{display:block;font-size:24px;margin-top:6px}nav{display:flex;gap:6px;overflow:auto;background:#fff;padding:10px}.page{display:none}.page.active{display:block}.formgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.field label{display:block;font-size:13px;margin-bottom:4px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border-bottom:1px solid #e5e7eb;text-align:left}.login{max-width:400px;margin:70px auto}.muted{color:#64748b;font-size:13px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#fee2e2;color:#991b1b;font-size:12px}.ok{background:#dcfce7;color:#166534}.nowrap{white-space:nowrap}.small{font-size:12px}.reportgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.formgrid{grid-template-columns:1fr}.reportgrid{grid-template-columns:1fr}table{font-size:12px}}
-.receipt{max-width:700px;margin:auto;border:1px solid #dbe2ea;padding:24px;background:#fff}.receipt h2{text-align:center;margin:0 0 4px}.receipt .line{display:flex;justify-content:space-between;border-bottom:1px dashed #cbd5e1;padding:8px 0}.btnlink{display:inline-block;padding:7px 10px;border-radius:7px;background:#16a34a;color:#fff;text-decoration:none;font-size:12px}.printbtn{margin-bottom:12px}.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.modal.show{display:flex}.modalbox{background:#fff;width:min(520px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:18px;box-shadow:0 10px 40px #0004}.modalbox h3{margin-top:0}.modalactions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}@media print{body>*{display:none!important}#receiptPrint{display:block!important;position:static}.receipt{border:0;box-shadow:none}}</style></head><body><div id="login" class="wrap"><div class="card login"><h2>Maths Mumkin Classes</h2><p class="muted">Online Coaching Management</p><label>Email</label><input id="email" style="width:100%;box-sizing:border-box"><br><br><label>Password</label><input id="password" type="password" style="width:100%;box-sizing:border-box"><br><br><button onclick="signIn()" style="width:100%">Login</button><p id="msg" class="muted"></p></div></div><div id="app" style="display:none"><header><div><b>Maths Mumkin Classes</b><div class="muted" style="color:#dbeafe">Online Management</div></div><div><span id="who"></span> <button class="secondary" onclick="signOut()">Logout</button></div></header><nav id="nav"></nav><main class="wrap"><section id="dashboard" class="page active"><h2>Dashboard</h2><div class="grid"><div class="card stat">Students<b id="nStudents">0</b></div><div class="card stat">Present Today<b id="nPresent">0</b></div><div class="card stat">Collected This Month<b id="nCollected">₹0</b></div><div class="card stat">Due This Month<b id="nDue">₹0</b></div></div><div class="card"><h3>Quick Reports</h3><div class="toolbar"><button onclick="page('due')">View Fee Due</button><button class="secondary" onclick="exportStudentsCSV()">Export Students</button><button class="secondary" onclick="exportFeesCSV()">Export Fees</button><button class="secondary" onclick="exportStudentsXLSX()">Excel Students</button><button class="secondary" onclick="exportFeesXLSX()">Excel Fees</button></div></div></section><section id="students" class="page"><h2>Students</h2><div class="card"><div class="formgrid"><div class="field"><label>Name *</label><input id="sn"></div><div class="field"><label>Class</label><input id="sc"></div><div class="field"><label>Phone</label><input id="sp"></div><div class="field"><label>Joining Date</label><input id="sj" type="date"></div><div class="field"><label>Monthly Fee</label><input id="sf" type="number" value="1000"></div></div><br><button onclick="addStudent()">Add Student</button></div><div class="card"><input id="search" placeholder="Search students" oninput="renderStudents()" style="width:100%;box-sizing:border-box"><br><br><div style="overflow:auto"><table><thead><tr><th>Name</th><th>Class</th><th>Phone</th><th>Joining</th><th>Fee</th><th>Actions</th></tr></thead><tbody id="studentRows"></tbody></table></div></div></section><section id="fees" class="page"><h2>Monthly Fees</h2><div class="card"><div class="formgrid"><div class="field"><label>Student</label><select id="fs"></select></div><div class="field"><label>Month</label><input id="fm" type="month"></div><div class="field"><label>Amount Paid</label><input id="fa" type="number"></div><div class="field"><label>Payment Date</label><input id="fd" type="date"></div></div><br><button onclick="addFee()">Record Payment</button></div><div class="card"><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Month</th><th>Paid</th><th>Date</th><th>By</th><th>Actions</th></tr></thead><tbody id="feeRows"></tbody></table></div></div></section><section id="attendance" class="page"><h2>Attendance</h2><div class="card"><label>Date</label><input id="ad" type="date" onchange="renderAttendance()"><br><br><div style="overflow:auto"><table><thead><tr><th>Name</th><th>Class</th><th>Status</th><th>Action</th></tr></thead><tbody id="attRows"></tbody></table></div></div></section><section id="due" class="page"><h2>Fee Due List</h2><div class="card"><div class="toolbar"><label>Month <input id="dueMonth" type="month"></label><button onclick="renderDue()">Refresh</button><button class="secondary" onclick="exportDueCSV()">Export Due</button><button class="secondary" onclick="exportDueXLSX()">Excel Due</button></div></div><div class="card"><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Class</th><th>Monthly Fee</th><th>Paid</th><th>Due</th><th>Reminder</th></tr></thead><tbody id="dueRows"></tbody></table></div></div></section>
+.receipt{max-width:700px;margin:auto;border:1px solid #dbe2ea;padding:24px;background:#fff}.receipt h2{text-align:center;margin:0 0 4px}.receipt .line{display:flex;justify-content:space-between;border-bottom:1px dashed #cbd5e1;padding:8px 0}.btnlink{display:inline-block;padding:7px 10px;border-radius:7px;background:#16a34a;color:#fff;text-decoration:none;font-size:12px}.printbtn{margin-bottom:12px}.modal{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}.modal.show{display:flex}.modalbox{background:#fff;width:min(520px,100%);max-height:90vh;overflow:auto;border-radius:14px;padding:18px;box-shadow:0 10px 40px #0004}.modalbox h3{margin-top:0}.modalactions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}@media print{body>*{display:none!important}#receiptPrint{display:block!important;position:static}.receipt{border:0;box-shadow:none}}</style></head><body><div id="login" class="wrap"><div class="card login"><h2>Maths Mumkin Classes</h2><p class="muted">Online Coaching Management</p><label>Email</label><input id="email" style="width:100%;box-sizing:border-box"><br><br><label>Password</label><input id="password" type="password" style="width:100%;box-sizing:border-box"><br><br><button onclick="signIn()" style="width:100%">Login</button><p id="msg" class="muted"></p></div></div><div id="app" style="display:none"><header><div><b>Maths Mumkin Classes</b><div class="muted" style="color:#dbeafe">Online Management</div></div><div><span id="who"></span> <button class="secondary" onclick="signOut()">Logout</button></div></header><nav id="nav"></nav><main class="wrap"><section id="dashboard" class="page active"><h2>Dashboard</h2><div class="grid"><div class="card stat">Students<b id="nStudents">0</b></div><div class="card stat">Present Today<b id="nPresent">0</b></div><div class="card stat">Collected This Month<b id="nCollected">₹0</b></div><div class="card stat">Due This Month<b id="nDue">₹0</b></div></div><div class="card"><h3>Quick Reports</h3><div class="toolbar"><button onclick="page('due')">View Fee Due</button><button class="secondary" onclick="exportStudentsCSV()">Export Students</button><button class="secondary" onclick="exportFeesCSV()">Export Fees</button><button class="secondary" onclick="exportStudentsXLSX()">Excel Students</button><button class="secondary" onclick="exportFeesXLSX()">Excel Fees</button></div></div></section><section id="students" class="page"><h2>Students</h2><div class="card"><div class="formgrid"><div class="field"><label>Name *</label><input id="sn"></div><div class="field"><label>Class</label><input id="sc"></div><div class="field"><label>Phone</label><input id="sp"></div><div class="field"><label>Joining Date</label><input id="sj" type="date"></div><div class="field"><label>Monthly Fee</label><input id="sf" type="number" value="1000"></div></div><br><button onclick="addStudent()">Add Student</button></div><div class="card"><input id="search" placeholder="Search students" oninput="renderStudents()" style="width:100%;box-sizing:border-box"><br><br><div style="overflow:auto"><table><thead><tr><th>Name</th><th>Class</th><th>Phone</th><th>Joining</th><th>Fee</th><th>Actions</th></tr></thead><tbody id="studentRows"></tbody></table></div></div></section><section id="fees" class="page"><h2>Monthly Fees</h2><div class="card"><div class="formgrid"><div class="field"><label>Student</label><select id="fs"></select></div><div class="field"><label>Month</label><input id="fm" type="month"></div><div class="field"><label>Amount Paid</label><input id="fa" type="number"></div><div class="field"><label>Payment Date</label><input id="fd" type="date"></div></div><br><button onclick="addFee()">Record Payment</button></div><div class="card"><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Month</th><th>Paid</th><th>Date</th><th>By</th><th>Actions</th></tr></thead><tbody id="feeRows"></tbody></table></div></div></section><section id="attendance" class="page"><h2>Attendance</h2><div class="card"><label>Date</label><input id="ad" type="date" onchange="renderAttendance()"><br><br><div style="overflow:auto"><table><thead><tr><th>Name</th><th>Class</th><th>Status</th><th>Action</th></tr></thead><tbody id="attRows"></tbody></table></div></div></section><section id="due" class="page"><h2>Fee Due &amp; Manual Fee Entry</h2><div class="card"><div class="toolbar"><label>Fee Month <input id="dueMonth" type="month" onchange="syncDueEntryMonth()"></label><button onclick="renderDue()">Refresh</button><button class="secondary" onclick="exportDueCSV()">Export Due</button><button class="secondary" onclick="exportDueXLSX()">Excel Due</button></div><p class="muted">Choose a month to review dues or enter past payment records. Students whose selected month's fee is fully paid will not appear in the due list.</p></div><div class="card"><h3>Enter / Backfill Monthly Fee Payment</h3><div class="formgrid"><div class="field"><label>Student</label><select id="dueEntryStudent"></select></div><div class="field"><label>Fee Month</label><input id="dueEntryMonth" type="month"></div><div class="field"><label>Amount Paid (₹)</label><input id="dueEntryAmount" type="number" min="0.01" step="0.01" placeholder="Enter payment amount"></div><div class="field"><label>Payment Date</label><input id="dueEntryDate" type="date"></div></div><p class="muted">For a month with multiple instalments, record each payment separately. The app totals payments for that month.</p><button onclick="recordDuePayment()">Save Fee Payment</button></div><div class="card"><h3>Outstanding Fees for Selected Month</h3><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Class</th><th>Monthly Fee</th><th>Paid</th><th>Due</th><th>Actions</th></tr></thead><tbody id="dueRows"></tbody></table></div></div><div class="card"><h3>Payments Recorded for Selected Month</h3><p class="muted">Use Edit here to correct past records. This table is managed from the Fee Due tab.</p><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Month</th><th>Amount Paid</th><th>Payment Date</th><th>Action</th></tr></thead><tbody id="duePaymentRows"></tbody></table></div></div></section>
 <section id="reports" class="page"><h2>Reports</h2><div class="card"><div class="toolbar"><label>Fee Month <input id="reportMonth" type="month"></label><button onclick="renderReports()">Generate</button></div></div><div class="reportgrid"><div class="card stat">Total Fees<b id="rTotalFees">₹0</b></div><div class="card stat">Collected<b id="rCollected">₹0</b></div><div class="card stat">Due<b id="rDue">₹0</b></div></div><br><div class="card"><h3>Attendance Report</h3><div class="toolbar"><label>Date <input id="reportDate" type="date"></label><button onclick="renderAttendanceReport()">Generate</button><label>Month <input id="attMonth" type="month"></label><button onclick="renderMonthlyAttendance()">Monthly %</button><button class="secondary" onclick="exportAttendanceCSV()">Export Attendance</button><button class="secondary" onclick="exportAttendanceXLSX()">Excel Attendance</button></div><div style="overflow:auto"><table><thead><tr><th>Student</th><th>Class</th><th>Status</th></tr></thead><tbody id="reportAttRows"></tbody></table></div></div></section>
 <section id="history" class="page"><h2>Student History</h2><div class="card" id="historyBox">Select a student from Students.</div></section>
 <section id="receiptPrint" class="page"><button class="secondary printbtn" onclick="page('fees')">← Back to Fees</button><div id="receiptBox"></div></section>
@@ -14,10 +14,10 @@ async function signIn(){msg.textContent='Signing in...';let {data,error}=await s
 async function start(u){user=u;let r=await sb.from('teacher_profiles').select('name,role,active').eq('id',u.id).single();if(r.error||!r.data||!r.data.active){await sb.auth.signOut();msg.textContent='Your account is not registered as an active teacher/admin.';return}profile=r.data;login.style.display='none';app.style.display='block';who.textContent=profile.name+' ('+profile.role+')';buildNav();await refresh()}
 async function signOut(){await sb.auth.signOut();location.reload()}
 function buildNav(){let a=[['dashboard','Dashboard'],['students','Students'],['fees','Fees'],['attendance','Attendance'],['due','Fee Due'],['reports','Reports']];if(profile.role==='admin')a.push(['teachers','Teachers'],['settings','Settings']);nav.innerHTML=a.map((x,i)=>`<button class="${i?'secondary':''}" onclick="page('${x[0]}')">${x[1]}</button>`).join('')}
-function page(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');refresh();if(id==='due')renderDue();if(id==='reports'){renderReports();renderAttendanceReport()}}
-async function refresh(){let s=await sb.from('students').select('*').order('name');students=s.data||[];renderStudents();fs.innerHTML='<option value="">Select student</option>'+students.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.class_name)}</option>`).join('');await renderFees();await renderAttendance();await dashboard()}
+function page(id){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(id).classList.add('active');refresh();if(id==='due'){syncDueEntryMonth();if(!dueEntryDate.value)dueEntryDate.value=today();renderDue()}if(id==='reports'){renderReports();renderAttendanceReport()}}
+async function refresh(){let s=await sb.from('students').select('*').order('name');students=s.data||[];renderStudents();fs.innerHTML='<option value="">Select student</option>'+students.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.class_name)}</option>`).join('');if(document.getElementById('dueEntryStudent'))dueEntryStudent.innerHTML='<option value="">Select student</option>'+students.map(x=>`<option value="${x.id}">${esc(x.name)} — ${esc(x.class_name)}</option>`).join('');await renderFees();await renderAttendance();await dashboard()}
 async function addStudent(){if(!sn.value.trim())return alert('Enter student name');let {error}=await sb.from('students').insert({name:sn.value.trim(),class_name:sc.value.trim(),phone:sp.value.trim(),joining_date:sj.value||today(),monthly_fee:Number(sf.value)||1000});if(error)alert(error.message);else{sn.value='';sc.value='';sp.value='';sj.value='';await refresh()}}
-function renderStudents(){let q=(search.value||'').toLowerCase();studentRows.innerHTML=students.filter(x=>(x.name+' '+(x.class_name||'')+' '+(x.phone||'')).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.class_name)}</td><td>${esc(x.phone)}</td><td>${x.joining_date||''}</td><td>₹${x.monthly_fee}</td><td class="nowrap">${profile.role==='admin'?`<button class="secondary" onclick="openStudentEdit(${x.id})">✏️ Edit</button> `:''}<button class="secondary" onclick="viewStudent(${x.id})">History</button> ${waNumber(x.phone)?`<button class="secondary" onclick="openStudentWhatsApp(${x.id})">WhatsApp</button>`:''} ${profile.role==='admin'?`<button class="danger" onclick="delStudent(${x.id})">Delete</button>`:''}</td></tr>`).join('')}
+function renderStudents(){let q=(search.value||'').toLowerCase();studentRows.innerHTML=students.filter(x=>(x.name+' '+(x.class_name||'')+' '+(x.phone||'')).toLowerCase().includes(q)).map(x=>`<tr><td>${esc(x.name)}</td><td>${esc(x.class_name)} ${x.coaching_status==='left'?'<span class="pill">Left</span>':''}</td><td>${esc(x.phone)}</td><td>${x.joining_date||''}</td><td>₹${x.monthly_fee}</td><td class="nowrap">${profile.role==='admin'?`<button class="secondary" onclick="openStudentEdit(${x.id})">✏️ Edit</button> `:''}<button class="secondary" onclick="viewStudent(${x.id})">History</button> ${waNumber(x.phone)?`<button class="secondary" onclick="openStudentWhatsApp(${x.id})">WhatsApp</button>`:''} ${profile.role==='admin'?`<button class="danger" onclick="delStudent(${x.id})">Delete</button>`:''}</td></tr>`).join('')}
 async function delStudent(id){if(!confirm('Delete this student and their records?'))return;let {error}=await sb.from('students').delete().eq('id',id);if(error)alert(error.message);else refresh()}
 async function addFee(){let sid=Number(fs.value);if(!sid||!Number(fa.value))return alert('Select student and amount');let {error}=await sb.from('fees').insert({student_id:sid,fee_month:(fm.value||month())+'-01',amount:Number(fa.value),payment_date:fd.value||today(),recorded_by:user.id});if(error)alert(error.message);else{fa.value='';await refresh()}}
 async function renderFees(){let r=await sb.from('fees').select('id,fee_month,amount,payment_date,recorded_by,student_id,students(name,class_name,phone)').order('payment_date',{ascending:false});feeRows.innerHTML=(r.data||[]).map(x=>`<tr><td>${esc(x.students?.name)}</td><td>${String(x.fee_month).slice(0,7)}</td><td>₹${x.amount}</td><td>${x.payment_date}</td><td>${x.recorded_by===user.id?'You':'Teacher'}</td><td class="nowrap">${profile.role==='admin'?`<button class="secondary" onclick="openFeeEdit(${x.id},${x.student_id})">✏️ Edit</button> `:''}<button class="secondary" onclick="showReceipt('${x.id}')">Receipt</button></td></tr>`).join('')}
@@ -28,10 +28,38 @@ async function monthFees(ym){
  let r=await sb.from('fees').select('student_id,amount').eq('fee_month',ym+'-01');
  return r.data||[];
 }
+function syncDueEntryMonth(){
+ if(document.getElementById('dueEntryMonth'))dueEntryMonth.value=dueMonth.value||month();
+}
+function startDuePayment(studentId,ym){
+ dueEntryStudent.value=String(studentId);
+ dueEntryMonth.value=ym||dueMonth.value||month();
+ dueEntryAmount.value='';
+ dueEntryDate.value=today();
+ dueEntryStudent.scrollIntoView({behavior:'smooth',block:'center'});
+}
+async function recordDuePayment(){
+ if(profile?.role!=='admin')return alert('Only Admin can record fee payments from this section.');
+ const sid=Number(dueEntryStudent.value),ym=dueEntryMonth.value||dueMonth.value||month();
+ const amount=Number(dueEntryAmount.value),payDate=dueEntryDate.value||today();
+ if(!sid)return alert('Please select a student.');
+ if(!/^\d{4}-\d{2}$/.test(ym))return alert('Please select the fee month.');
+ if(!(amount>0))return alert('Enter an amount greater than zero.');
+ const {error}=await sb.from('fees').insert({student_id:sid,fee_month:ym+'-01',amount,payment_date:payDate,recorded_by:user.id});
+ if(error)return alert('Could not save payment: '+error.message);
+ dueMonth.value=ym;dueEntryAmount.value='';
+ await refresh();await renderDue();
+ alert('Fee payment saved. The due list has been updated.');
+}
 async function renderDue(){
  let ym=dueMonth.value||month();
- let payments=await monthFees(ym), paid={}; payments.forEach(x=>paid[x.student_id]=(paid[x.student_id]||0)+Number(x.amount));
- dueRows.innerHTML=students.map(s=>{let p=paid[s.id]||0,d=Math.max(0,Number(s.monthly_fee)-p);if(d<=0)return '';let phone=waNumber(s.phone);let msg='Dear Parent,\n\nThis is a gentle reminder from Maths Mumkin Classes regarding the pending coaching fee for '+s.name+'.\n\n📚 Class: '+(s.class_name||'')+'\n📅 Fee Month: '+ym+'\n💰 Amount Due: ₹'+d+'\n\nKindly clear the pending fee at your earliest convenience.\n\nThank you.\nMaths Mumkin Classes';let wa=`<button class="btnlink" onclick="openDueWhatsApp(${s.id},${d},'${ym}')">${phone?'WhatsApp':'Add WhatsApp'}</button>`;return `<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>₹${s.monthly_fee}</td><td>₹${p}</td><td><span class="pill">₹${d}</span></td><td>${wa}</td></tr>`}).join('')||'<tr><td colspan="6">No outstanding dues for this month.</td></tr>';
+ if(document.getElementById('dueEntryMonth')&&!dueEntryMonth.value)dueEntryMonth.value=ym;
+ if(document.getElementById('dueEntryDate')&&!dueEntryDate.value)dueEntryDate.value=today();
+ let payments=await monthFees(ym),paid={};payments.forEach(x=>paid[x.student_id]=(paid[x.student_id]||0)+Number(x.amount));
+ let rows=students.filter(s=>(s.coaching_status||'active')!=='left').map(s=>{let p=paid[s.id]||0,d=Math.max(0,Number(s.monthly_fee)-p);if(d<=0)return '';let phone=waNumber(s.phone);return `<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>₹${Number(s.monthly_fee)||0}</td><td>₹${p}</td><td><span class="pill">₹${d}</span></td><td class="nowrap"><button onclick="startDuePayment(${s.id},'${ym}')">Record Payment</button> <button class="secondary" onclick="openDueWhatsApp(${s.id},${d},'${ym}')">${phone?'WhatsApp':'Add WhatsApp'}</button></td></tr>`}).filter(Boolean);
+ dueRows.innerHTML=rows.join('')||'<tr><td colspan="6">No outstanding dues for '+esc(ym)+'. All listed students are paid for this month.</td></tr>';
+ let existing=await sb.from('fees').select('id,student_id,fee_month,amount,payment_date,students(name,class_name)').gte('fee_month',ym+'-01').lt('fee_month',(()=>{let [y,m]=ym.split('-').map(Number);return new Date(y,m,1).toISOString().slice(0,10)})()).order('payment_date',{ascending:false});
+ duePaymentRows.innerHTML=(existing.data||[]).map(x=>`<tr><td>${esc(x.students?.name)}</td><td>${String(x.fee_month).slice(0,7)}</td><td>₹${Number(x.amount)||0}</td><td>${x.payment_date||''}</td><td>${profile.role==='admin'?`<button class="secondary" onclick="openFeeEdit(${x.id},${x.student_id})">Edit Payment</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="5">No payments recorded for this month yet.</td></tr>';
 }
 async function renderReports(){
  let ym=reportMonth.value||month(), payments=await monthFees(ym), collected=payments.reduce((a,x)=>a+Number(x.amount),0), due=0;
@@ -43,10 +71,149 @@ async function renderAttendanceReport(){
  reportAttRows.innerHTML=students.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>${map[s.id]?`<span class="pill ${map[s.id]==='Present'?'ok':''}">${map[s.id]}</span>`:'Not marked'}</td></tr>`).join('');
 }
 async function viewStudent(id){
- let s=students.find(x=>x.id===id);if(!s)return;let [fr,ar]=await Promise.all([sb.from('fees').select('id,fee_month,amount,payment_date').eq('student_id',id).order('fee_month',{ascending:false}),sb.from('attendance').select('id,attendance_date,status').eq('student_id',id).order('attendance_date',{ascending:false})]);
- let fees=fr.data||[],atts=ar.data||[],paid=fees.reduce((a,x)=>a+Number(x.amount),0),present=atts.filter(x=>x.status==='Present').length;
- historyBox.innerHTML=`<div class="toolbar" style="justify-content:space-between"><div><h3 style="margin:0">${esc(s.name)}</h3><p>Class: ${esc(s.class_name||'')} &nbsp; Phone: ${esc(s.phone||'')} &nbsp; Joining: ${s.joining_date||''}</p><p>Monthly Fee: <b>₹${s.monthly_fee}</b> &nbsp; Total Paid: <b>₹${paid}</b> &nbsp; Present Days: <b>${present}</b></p></div>${profile.role==='admin'?'<button class="secondary" onclick="openStudentEdit('+s.id+')">✏️ Edit Student</button>':''}</div><h4>Fee History</h4><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Amount</th><th>Payment Date</th><th>Action</th></tr></thead><tbody>${fees.map(x=>`<tr><td>${String(x.fee_month).slice(0,7)}</td><td>₹${x.amount}</td><td>${x.payment_date}</td><td>${profile.role==='admin'?`<button class="secondary" onclick="openFeeEdit(${x.id},${s.id})">✏️ Edit</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="4">No fee payments.</td></tr>'}</tbody></table></div><h4>Attendance History</h4><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>${atts.map(x=>`<tr><td>${x.attendance_date}</td><td>${x.status}</td><td>${profile.role==='admin'?`<button class="secondary" onclick="openAttendanceEdit(${x.id},${s.id})">✏️ Edit</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="3">No attendance records.</td></tr>'}</tbody></table></div>`;
+ let s=students.find(x=>x.id===id);if(!s)return;
+ let [fr,ar]=await Promise.all([
+  sb.from('fees').select('id,fee_month,amount,payment_date').eq('student_id',id).order('fee_month',{ascending:false}),
+  sb.from('attendance').select('id,attendance_date,status').eq('student_id',id).order('attendance_date',{ascending:false})
+ ]);
+ let fees=fr.data||[],atts=ar.data||[],paid=fees.reduce((a,x)=>a+Number(x.amount||0),0),present=atts.filter(x=>x.status==='Present').length;
+ const money=n=>'₹'+Number(n||0).toLocaleString('en-IN',{maximumFractionDigits:2});
+ const currentMonth=month(),joinMonth=(s.joining_date||today()).slice(0,7),paidByMonth={};
+ fees.forEach(x=>{let ym=String(x.fee_month||'').slice(0,7);paidByMonth[ym]=(paidByMonth[ym]||0)+Number(x.amount||0)});
+ let ledger=[],billed=0;
+ let [jy,jm]=joinMonth.split('-').map(Number),[cy,cm]=currentMonth.split('-').map(Number);
+ let cursor=new Date(jy,jm-1,1),last=new Date(cy,cm-1,1);
+ while(cursor<=last){
+  let ym=cursor.getFullYear()+'-'+String(cursor.getMonth()+1).padStart(2,'0');
+  let charge=Number(s.monthly_fee)||0,monthPaid=paidByMonth[ym]||0,balance=Math.max(0,charge-monthPaid);
+  billed+=charge;ledger.push({ym,charge,paid:monthPaid,balance});cursor.setMonth(cursor.getMonth()+1);
+ }
+ let outstanding=Math.max(0,billed-paid);
+ historyBox.innerHTML=`<div class="toolbar" style="justify-content:space-between"><div><h3 style="margin:0">${esc(s.name)}</h3><p>Class: ${esc(s.class_name||'')} &nbsp; Phone: ${esc(s.phone||'')} &nbsp; Joining: ${s.joining_date||''}</p><p>Monthly Fee: <b>${money(s.monthly_fee)}</b> &nbsp; Present Days: <b>${present}</b></p></div>${profile.role==='admin'?'<button class="secondary" onclick="openStudentEdit('+s.id+')">✏️ Edit Student</button>':''}</div>
+ <div class="reportgrid"><div class="card stat">Total Fees Charged<b>${money(billed)}</b><div class="muted">From joining month through ${currentMonth}</div></div><div class="card stat">Total Fees Collected<b>${money(paid)}</b></div><div class="card stat">Outstanding Balance<b>${money(outstanding)}</b></div></div>
+ <div class="card" style="margin-top:16px"><h4>Coaching Status / Leaving Details</h4><p class="muted">Mark a student as left without deleting their account, fee records, or attendance history.</p><div class="formgrid"><div class="field"><label>Student status</label><select id="leftStatus_${s.id}"><option value="active" ${(s.coaching_status||'active')==='active'?'selected':''}>Currently studying</option><option value="left" ${s.coaching_status==='left'?'selected':''}>Left coaching</option></select></div><div class="field"><label>Leaving date</label><input type="date" id="leftDate_${s.id}" value="${s.left_date||''}"></div><div class="field" style="grid-column:1/-1"><label>Reason for leaving</label><textarea id="leftReason_${s.id}" rows="2" placeholder="Enter reason for leaving">${esc(s.left_reason||'')}</textarea></div></div>${profile.role==='admin'?`<button onclick="saveCoachingStatus(${s.id})">Save Coaching Status</button>`:'Only Admin can update this information.'}${s.coaching_status==='left'?`<p><b>Status:</b> Left coaching on ${s.left_date||'date not recorded'} <br><b>Reason:</b> ${esc(s.left_reason||'Not recorded')}</p>`:''}</div>
+ <h4>Month-wise Fee Account</h4><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Fee Charged</th><th>Paid</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead><tbody>${ledger.map(x=>`<tr><td>${x.ym}</td><td>${money(x.charge)}</td><td>${money(x.paid)}</td><td>${money(x.balance)}</td><td><span class="pill ${x.balance<=0?'ok':''}">${x.balance<=0?'Paid':x.paid>0?'Part Paid':'Due'}</span></td><td>${profile.role==='admin'?`<button class="secondary" onclick="openMonthFeeEdit(${s.id},'${x.ym}',${x.charge},${x.paid})">✏️ Edit Month</button>`:'—'}</td></tr>`).join('')}</tbody></table></div>
+ <div class="card" style="margin-top:16px"><h4>Bulk Edit All Monthly Fee Records</h4><p class="muted">Correct several months here and press Save All once. Enter the final total paid for each month; enter 0 for unpaid months. If you increase a month's paid total, enter the date of that additional payment. Leave unchanged months as they are.</p><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Fee Charged (₹)</th><th>Correct total paid (₹)</th><th>Payment date for added amount</th></tr></thead><tbody>${ledger.map(x=>{let monthRows=fees.filter(f=>String(f.fee_month||'').slice(0,7)===x.ym);let lastDate=monthRows.map(f=>f.payment_date).filter(Boolean).sort().slice(-1)[0]||'';return `<tr><td>${x.ym}</td><td>${x.charge}</td><td><input type="number" min="0" step="0.01" id="bulkPaid_${x.ym}" value="${x.paid}" style="width:130px"></td><td><input type="date" id="bulkDate_${x.ym}" value="${lastDate}" style="width:160px"></td></tr>`}).join('')}</tbody></table></div><p style="margin-top:12px">${profile.role==='admin'?`<button onclick="saveAllMonthlyFees(${s.id})">💾 Save All Monthly Records</button>`:'Only Admin can edit fee records.'}</p><p class="muted">Changes are saved to the existing Supabase fee records. Review all amounts before saving.</p></div>
+ <h4>Payment History</h4><div style="overflow:auto"><table><thead><tr><th>Month</th><th>Amount Paid</th><th>Payment Date</th><th>Action</th></tr></thead><tbody>${fees.map(x=>`<tr><td>${String(x.fee_month).slice(0,7)}</td><td>${money(x.amount)}</td><td>${x.payment_date||''}</td><td>${profile.role==='admin'?`<button class="secondary" onclick="openFeeEdit(${x.id},${s.id})">✏️ Edit Past Record</button>`:'View only'}</td></tr>`).join('')||'<tr><td colspan="4">No fee payments recorded yet.</td></tr>'}</tbody></table></div>
+ <h4>Attendance History</h4><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>${atts.map(x=>`<tr><td>${x.attendance_date}</td><td>${x.status}</td><td>${profile.role==='admin'?`<button class="secondary" onclick="openAttendanceEdit(${x.id},${s.id})">✏️ Edit</button>`:'—'}</td></tr>`).join('')||'<tr><td colspan="3">No attendance records.</td></tr>'}</tbody></table></div>`;
  page('history');
+}
+
+
+async function openMonthFeeEdit(studentId, ym, monthlyCharge, currentPaid){
+ if(profile?.role!=='admin')return alert('Only Admin can edit fee records.');
+ const amountText=prompt(`Edit fee record for ${ym}\nMonthly fee charged: ₹${monthlyCharge}\nCurrent total paid for this month: ₹${currentPaid}\n\nEnter the CORRECT TOTAL amount paid for this month (enter 0 if unpaid):`,String(currentPaid));
+ if(amountText===null)return;
+ const total=Number(amountText);
+ if(!Number.isFinite(total)||total<0)return alert('Enter a valid amount (0 or more).');
+ if(total>Number(monthlyCharge))return alert('Total paid cannot exceed the monthly fee in this month-wise editor. For extra/advance payments, use Payment History.');
+ const {data:records,error}=await sb.from('fees').select('id,amount,fee_month,payment_date').eq('student_id',studentId).gte('fee_month',ym+'-01').lt('fee_month',(()=>{let [y,m]=ym.split('-').map(Number);return new Date(y,m,1).toISOString().slice(0,10)})()).order('payment_date',{ascending:true});
+ if(error)return alert('Could not load monthly records: '+error.message);
+ const current=(records||[]).reduce((sum,r)=>sum+Number(r.amount||0),0);
+ const diff=Math.round((total-current)*100)/100;
+ if(Math.abs(diff)<0.005){alert('No change needed.');return;}
+ if(diff>0){
+   const date=prompt(`Enter payment date for this adjustment (YYYY-MM-DD):`,today());
+   if(date===null)return;
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return alert('Enter date as YYYY-MM-DD.');
+   const {error:insertError}=await sb.from('fees').insert({student_id:studentId,fee_month:ym+'-01',amount:diff,payment_date:date,recorded_by:user.id});
+   if(insertError)return alert('Could not add payment adjustment: '+insertError.message);
+ }else{
+   let reduce=-diff;
+   for(const r of [...(records||[])].reverse()){
+     if(reduce<=0.005)break;
+     const amt=Number(r.amount||0), take=Math.min(amt,reduce), remain=Math.round((amt-take)*100)/100;
+     if(remain<=0.005){
+       const {error:delError}=await sb.from('fees').delete().eq('id',r.id);
+       if(delError)return alert('Could not correct payment record: '+delError.message);
+     }else{
+       const {error:updateError}=await sb.from('fees').update({amount:remain}).eq('id',r.id);
+       if(updateError)return alert('Could not correct payment record: '+updateError.message);
+     }
+     reduce=Math.round((reduce-take)*100)/100;
+   }
+   if(reduce>0.005)return alert('Could not reduce the selected month by the requested amount. Please check the payment records.');
+ }
+ await refresh();
+ await viewStudent(studentId);
+ alert('Month-wise fee record updated.');
+}
+
+
+async function saveAllMonthlyFees(studentId){
+ if(profile?.role!=='admin')return alert('Only Admin can edit fee records.');
+ const s=students.find(x=>x.id===studentId);
+ if(!s)return alert('Student not found.');
+ const ledgerMonths=[];
+ const [frErrSafe] = [null];
+ // Read the current records again so this save uses the latest database values.
+ const {data:allRecords,error:loadError}=await sb.from('fees').select('id,fee_month,amount,payment_date').eq('student_id',studentId).order('payment_date',{ascending:true});
+ if(loadError)return alert('Could not load current payment records: '+loadError.message);
+ const all=allRecords||[];
+ document.querySelectorAll('[id^="bulkPaid_"]').forEach(el=>{
+  const ym=el.id.slice('bulkPaid_'.length);
+  const dateEl=document.getElementById('bulkDate_'+ym);
+  ledgerMonths.push({ym,target:Number(el.value),date:dateEl?.value||''});
+ });
+ for(const item of ledgerMonths){
+  if(!Number.isFinite(item.target)||item.target<0)return alert('Enter a valid paid amount for '+item.ym+'.');
+  const charge=Number(s.monthly_fee)||0;
+  if(item.target>charge)return alert('Paid amount for '+item.ym+' exceeds the monthly fee ₹'+charge+'. Please use Payment History for advance or extra payments.');
+ }
+ const changed=[];
+ for(const item of ledgerMonths){
+  const records=all.filter(r=>String(r.fee_month||'').slice(0,7)===item.ym);
+  const current=Math.round(records.reduce((sum,r)=>sum+Number(r.amount||0),0)*100)/100;
+  const target=Math.round(item.target*100)/100;
+  const diff=Math.round((target-current)*100)/100;
+  if(Math.abs(diff)<0.005)continue;
+  if(diff>0){
+   if(!item.date)return alert('Please enter a payment date for the additional amount in '+item.ym+'.');
+   if(!/^\d{4}-\d{2}-\d{2}$/.test(item.date))return alert('Enter date in YYYY-MM-DD format for '+item.ym+'.');
+  }
+  changed.push({...item,records,current,target,diff});
+ }
+ if(!changed.length)return alert('No changes to save.');
+ if(!confirm('Save changes for '+changed.length+' month(s) for '+s.name+'?'))return;
+ for(const item of changed){
+  if(item.diff>0){
+   const {error}=await sb.from('fees').insert({student_id:studentId,fee_month:item.ym+'-01',amount:item.diff,payment_date:item.date,recorded_by:user.id});
+   if(error)return alert('Saving stopped at '+item.ym+': '+error.message+'. Earlier month changes may already have been saved; refresh and check before retrying.');
+  }else{
+   let reduce=-item.diff;
+   for(const r of [...item.records].reverse()){
+    if(reduce<=0.005)break;
+    const amount=Number(r.amount||0),take=Math.min(amount,reduce),remain=Math.round((amount-take)*100)/100;
+    if(remain<=0.005){
+     const {error}=await sb.from('fees').delete().eq('id',r.id);
+     if(error)return alert('Saving stopped at '+item.ym+': '+error.message+'. Refresh and check before retrying.');
+    }else{
+     const {error}=await sb.from('fees').update({amount:remain}).eq('id',r.id);
+     if(error)return alert('Saving stopped at '+item.ym+': '+error.message+'. Refresh and check before retrying.');
+    }
+    reduce=Math.round((reduce-take)*100)/100;
+   }
+   if(reduce>0.005)return alert('Could not fully adjust '+item.ym+'. Please check payment records.');
+  }
+ }
+ await refresh();
+ await viewStudent(studentId);
+ alert('Monthly fee records saved successfully for '+changed.length+' month(s).');
+}
+
+
+async function saveCoachingStatus(studentId){
+ if(profile?.role!=='admin')return alert('Only Admin can update coaching status.');
+ const status=document.getElementById('leftStatus_'+studentId).value;
+ const leftDate=document.getElementById('leftDate_'+studentId).value||null;
+ const leftReason=document.getElementById('leftReason_'+studentId).value.trim()||null;
+ if(status==='left'&&!leftDate)return alert('Please enter the leaving date.');
+ if(status==='left'&&!leftReason)return alert('Please enter the reason for leaving.');
+ const patch={coaching_status:status,left_date:status==='left'?leftDate:null,left_reason:status==='left'?leftReason:null};
+ const {error}=await sb.from('students').update(patch).eq('id',studentId);
+ if(error)return alert('Could not save coaching status. If the database columns were not added yet, run the SQL instructions first. Details: '+error.message);
+ await refresh();await viewStudent(studentId);
+ alert('Coaching status saved. Student history and fee records are preserved.');
 }
 
 let editType='',editId=null,editStudentId=null;
@@ -170,5 +337,5 @@ async function renderMonthlyAttendance(){
  reportAttRows.innerHTML=students.map(s=>{let a=map[s.id]||[],p=a.filter(x=>x==='Present').length,ab=a.filter(x=>x==='Absent').length,total=p+ab,pct=total?((p/total)*100).toFixed(1)+'%':'—';return `<tr><td>${esc(s.name)}</td><td>${esc(s.class_name)}</td><td>Present: ${p} | Absent: ${ab} | <b>${pct}</b></td></tr>`}).join('');
 }
 async function changePassword(){let p=newpw.value;if(p.length<6)return alert('Password must be at least 6 characters');let {error}=await sb.auth.updateUser({password:p});if(error)alert(error.message);else{newpw.value='';alert('Password changed successfully')}}
-(async()=>{ad.value=today();fm.value=month();fd.value=today();dueMonth.value=month();reportMonth.value=month();reportDate.value=today();attMonth.value=month();let s=await sb.auth.getSession();if(s.data.session)start(s.data.session.user)})();
+(async()=>{ad.value=today();fm.value=month();fd.value=today();dueMonth.value=month();if(document.getElementById('dueEntryMonth'))dueEntryMonth.value=month();if(document.getElementById('dueEntryDate'))dueEntryDate.value=today();reportMonth.value=month();reportDate.value=today();attMonth.value=month();let s=await sb.auth.getSession();if(s.data.session)start(s.data.session.user)})();
 </script></body></html>
